@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 
 from llama_index.core import VectorStoreIndex, PromptTemplate
 
-from modules.llm_interface import create_watsonx_llm
+from modules.llm_interface import create_hf_llm
 import config
 
 logger = logging.getLogger(__name__)
@@ -21,8 +21,8 @@ def generate_initial_facts(index: VectorStoreIndex) -> str:
     """
     try:
         # Create LLM for generating facts
-        watsonx_llm = create_watsonx_llm(
-            temperature=0.0,
+        hf_llm = create_hf_llm(
+            temperature=0.1,
             max_new_tokens=500,
             decoding_method="sample"
         )
@@ -34,14 +34,14 @@ def generate_initial_facts(index: VectorStoreIndex) -> str:
         query_engine = index.as_query_engine(
             streaming=False,
             similarity_top_k=config.SIMILARITY_TOP_K,
-            llm=watsonx_llm,
+            llm=hf_llm,
             text_qa_template=facts_prompt
         )
         
         # Execute the query
         query = "Provide three interesting facts about this person's career or education."
         response = query_engine.query(query)
-        
+        print(f"The response of LLm is {response}")
         # Return the facts
         return response.response
     except Exception as e:
@@ -60,7 +60,7 @@ def answer_user_query(index: VectorStoreIndex, user_query: str) -> Any:
     """
     try:
         # Create LLM for answering questions
-        watsonx_llm = create_watsonx_llm(
+        hf_llm = create_hf_llm(
             temperature=0.0,
             max_new_tokens=250,
             decoding_method="greedy"
@@ -80,7 +80,7 @@ def answer_user_query(index: VectorStoreIndex, user_query: str) -> Any:
         query_engine = index.as_query_engine(
             streaming=False,
             similarity_top_k=config.SIMILARITY_TOP_K,
-            llm=watsonx_llm,
+            llm=hf_llm,
             text_qa_template=question_prompt
         )
         

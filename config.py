@@ -1,14 +1,9 @@
-WATSONX_URL = "https://jp-tok.ml.cloud.ibm.com"
-WATSONX_PROJECT_ID = "9a84ef08-3951-4195-bbc4-90d096773e14"
-
-LLM_MODEL_ID = "ibm/granite-3-8b-instruct"
-
-PROXYCURL_API_KEY = "6DXNLN4Ipg-9w-t6UYKNpZ331ThpAyaqmgEnXJjWYoRT"
+LLM_MODEL_ID = "ibm-granite/granite-3.2-2b-instruct"
 
 MOCK_DATA_URL = "https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/ZRe59Y_NJyn3hZgnF1iFYA/linkedin-profile-data.json"
 
 SIMILARITY_TOP_K = 5
-TEMPERATURE = 0.0
+TEMPERATURE = 0.1
 MAX_NEW_TOKENS = 500
 MIN_NEW_TOKENS = 1
 TOP_K = 50
