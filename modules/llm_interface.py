@@ -1,39 +1,57 @@
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from pydantic import PrivateAttr
+import asyncio
 from ibm_watsonx_ai.metanames import GenTextParamsMetaNames as GenParams
-from llama_index.llms.ibm import WatsonxLLM
+from llama_index.core.embeddings.multi_modal_base import BaseEmbedding
+from sentence_transformers import SentenceTransformer
+from llama_index.llms.huggingface import HuggingFaceLLM
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 import logging
 
 logger = logging.getLogger(__name__)
 
 import config
 
-def create_huggingface_embedding():
-    huggingFace_embedding = HuggingFaceEmbeddings()
-    return huggingFace_embedding
+def HuggingFaceWrapper():
+    embed_model = HuggingFaceEmbedding(
+        model_name="sentence-transformers/all-MiniLM-L6-v2"
+    )
+    return embed_model
 
-def create_watsonx_llm(
+def create_hf_llm(
     temperature: float = config.TEMPERATURE,
     max_new_tokens: int = config.MAX_NEW_TOKENS,
-    decoding_method: str = "sample"
+    decoding_method: str = "sample",
 ):
-    parameters = {
-        GenParams.DECODING_METHOD: decoding_method,
-        GenParams.MAX_NEW_TOKENS: max_new_tokens,
-        GenParams.MIN_NEW_TOKENS: config.MIN_NEW_TOKENS,
-        GenParams.TEMPERATURE: temperature,
-        GenParams.TOP_K: config.TOP_K,
-        GenParams.TOP_P: config.TOP_P,
-    }
+    tokenizer = AutoTokenizer.from_pretrained(config.LLM_MODEL_ID)
+    model = AutoModelForCausalLM.from_pretrained(
+        config.LLM_MODEL_ID,
+        device_map="auto",
+        dtype="auto"
+        )
+    try:
 
-    watsonx_llm = WatsonxLLM(
-        model_id=config.LLM_MODEL_ID,
-        url=config.MOCK_DATA_URL,
-        apikey=config.PROXYCURL_API_KEY,
-        project_id=config.WATSONX_PROJECT_ID,
-        params=parameters, 
-    )
-    logger.info(f"Created Watsonx LLM model: {config.LLM_MODEL_ID}")
-    return watsonx_llm
+        llm = HuggingFaceLLM(
+            model_name=config.LLM_MODEL_ID,
+            tokenizer_name=config.LLM_MODEL_ID,
+            max_new_tokens=max_new_tokens,
+            model=model,
+            messages_to_prompt=None,
+            completion_to_prompt=None,
+            generate_kwargs={
+                "temperature": temperature,
+                "top_k": config.TOP_K,
+                "top_p": config.TOP_P,
+                "do_sample": decoding_method == "sample",
+            }
+        )
+
+        logger.info(f"Created HuggingFace LLM model: {config.LLM_MODEL_ID}")
+        return llm
+
+    except Exception as e:
+        logger.error(f"Failed to create HuggingFace LLM: {e}")
+        return None
 
 def change_llm_model(new_model_id: str) -> None:
     """Change the LLM model to use.

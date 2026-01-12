@@ -1,17 +1,18 @@
 import json
+import traceback
 import config
 import logging
 from typing import Dict, List, Any, Optional
 from llama_index.core import Document, VectorStoreIndex
 from llama_index.core.node_parser import SentenceSplitter
-from modules.llm_interface import create_huggingface_embedding
+from modules.llm_interface import HuggingFaceWrapper
 
 logger = logging.getLogger(__name__)
 
 def split_profile_data (profile_data):
 
     try:
-        profile_json = json.dump(profile_data)
+        profile_json = json.dumps(profile_data)
 
         document = Document(text=profile_json)
 
@@ -34,8 +35,8 @@ def create_vector_database(nodes: List) -> Optional[VectorStoreIndex]:
         VectorStoreIndex or None if indexing fails.
     """
     try:
-        # Get the embedding model
-        embedding_model = create_huggingface_embedding()
+        # Get the embedding modelx
+        embedding_model = HuggingFaceWrapper()
         # Create a VectorStoreIndex from the nodes
         index = VectorStoreIndex(
             nodes=nodes,
@@ -47,6 +48,7 @@ def create_vector_database(nodes: List) -> Optional[VectorStoreIndex]:
         return index
     except Exception as e:
         logger.error(f"Error in create_vector_database: {e}")
+        traceback.print_exc()
         return None
     
 def verify_embeddings(index: VectorStoreIndex) -> bool:
